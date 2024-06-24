@@ -1,0 +1,119 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line_utils.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anasser- <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/06/24 17:23:12 by anasser-          #+#    #+#             */
+/*   Updated: 2024/06/24 17:23:14 by anasser-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "get_next_line.h"
+#include <stdio.h>
+
+void	ft_shift(char *s, int start)
+{
+	int	i;
+
+	i = 0;
+	while (s[start])
+	{
+		s[i] = s[start];
+		i++;
+		start++;
+	}
+	s[i] = '\0';
+}
+
+int	ft_islign(const char *s)
+{
+	int	i;
+
+	i = 0;
+	while (s[i])
+	{
+		if (s[i] == '\n')
+			return (i);
+		i++;
+	}
+	return (-1);
+}
+
+char	*ft_h2(int i, char **s)
+{
+	char	*ret;
+
+	i++;
+	ret = malloc((i + 1) * sizeof(char));
+	if (!ret)
+	{
+		free(*s);
+		return (0);
+	}
+	ft_strlcpy(ret, *s, ++i);
+	ft_shift(*s, i - 1);
+	if (**s == '\0')
+	{
+		free(*s);
+		*s = 0;
+	}
+	return (ret);
+}
+
+char	*ft_helper(char **s)
+{
+	char	*ret;
+
+	if (!*s || !**s)
+		return (0);
+	if (**s == '\0')
+	{
+		free(*s);
+		*s = 0;
+		return (0);
+	}
+	ret = ft_strdup(*s);
+	free(*s);
+	*s = 0;
+	return (ret);
+}
+
+char	*ft_split_f(char **s, int *eof, int fd)
+{
+	int		i;
+	char	*tmp;
+	char	*buffer;
+	char	*b;
+	int		sie;
+
+	buffer = 0;
+	i = ft_islign(*s);
+	if (i >= 0)
+		return (ft_h2(i, s));
+	else
+	{
+		buffer = malloc((BUFFER_SIZE + 1) * sizeof(char));
+		if (!buffer)
+			return (0);
+		*eof = read(fd, buffer, BUFFER_SIZE);
+		if (*eof <= 0)
+		{
+			free(buffer);
+			return (ft_helper(s));
+		}
+		buffer[*eof] = '\0';
+		b = ft_split_f(&buffer, eof, fd);
+		sie = ft_strlen(*s) + ft_strlen(b) + 1;
+		tmp = malloc(sie * sizeof(char));
+		if (!tmp)
+			return (0);
+		ft_strlcpy(tmp, *s, ft_strlen(*s));
+		ft_strlcpy(tmp, b, ft_strlen(b));
+		free(b);
+		free(*s);
+		*s = buffer;
+		return (tmp);
+	}
+}
